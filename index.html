@@ -3,141 +3,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>A.N.S.H. AI</title>
+<title>A.N.S.H Messages</title>
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-body {
-    background: #0b141a;
-    color: #f8fafc;
-    font-family: system-ui;
+body{
+  background:#000;
+  font-family:-apple-system, BlinkMacSystemFont, sans-serif;
+  color:white;
+  overflow:hidden;
 }
 
-/* scroll */
-.chat-box::-webkit-scrollbar { width: 6px; }
-.chat-box::-webkit-scrollbar-thumb {
-    background-color: #1f2c33;
-    border-radius: 3px;
+/* glass top bar */
+.topbar{
+  background:rgba(28,28,30,0.8);
+  backdrop-filter: blur(20px);
 }
 
-/* animation */
-.msg {
-    animation: pop 0.2s ease;
-}
-@keyframes pop {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+/* chat area */
+#chat::-webkit-scrollbar{width:6px;}
+#chat::-webkit-scrollbar-thumb{background:#2c2c2e;border-radius:10px;}
 
-/* header like WhatsApp */
-header {
-    background: #111b21;
+/* bubble animation */
+.msg{animation:pop .15s ease;}
+@keyframes pop{
+  from{opacity:0;transform:scale(0.98);}
+  to{opacity:1;transform:scale(1);}
 }
 </style>
 </head>
 
 <body class="h-screen flex flex-col">
 
-<!-- HEADER -->
-<header class="border-b border-slate-800 p-4 flex items-center justify-between">
-    <div>
-        <h1 class="text-lg font-bold text-green-400">🟢 A.N.S.H</h1>
-        <p class="text-xs text-slate-400">online</p>
+<!-- TOP BAR -->
+<div class="topbar p-3 text-center border-b border-zinc-800">
+  <div class="text-sm text-zinc-400">iMessage</div>
+  <div class="font-semibold text-white">A.N.S.H 💬</div>
+</div>
+
+<!-- CHAT -->
+<div id="chat" class="flex-1 overflow-y-auto p-3 space-y-2">
+
+  <div class="msg flex">
+    <div class="bg-zinc-800 text-white px-4 py-2 rounded-2xl max-w-[75%]">
+      Hey 👋 I’m A.N.S.H
     </div>
-</header>
+  </div>
 
-<!-- CHAT AREA -->
-<main id="chat-box" class="chat-box flex-1 overflow-y-auto p-4 space-y-3 max-w-3xl w-full mx-auto">
-
-    <div class="msg flex">
-        <div class="bg-[#202c33] text-white p-3 rounded-xl rounded-tl-none shadow max-w-[80%]">
-            Yo 👋 I'm A.N.S.H
-        </div>
-    </div>
-
-</main>
+</div>
 
 <!-- INPUT -->
-<footer class="p-3 bg-[#111b21] border-t border-slate-800">
-    <form id="chat-form" class="max-w-3xl mx-auto flex gap-2">
+<form id="form" class="p-3 border-t border-zinc-900 flex gap-2 bg-black">
 
-        <input id="user-input"
-        type="text"
-        placeholder="Message A.N.S.H..."
-        class="flex-1 bg-[#202c33] border border-slate-700 rounded-full px-4 py-3 text-white outline-none">
+  <input id="input"
+    class="flex-1 bg-zinc-900 text-white px-4 py-2 rounded-full outline-none"
+    placeholder="iMessage..." />
 
-        <button class="bg-green-500 hover:bg-green-400 px-5 py-2 rounded-full font-medium">
-            ➤
-        </button>
+  <button class="bg-blue-500 px-4 py-2 rounded-full font-semibold">
+    ↑
+  </button>
 
-    </form>
-</footer>
+</form>
 
 <script>
-const chatForm = document.getElementById('chat-form');
-const userInput = document.getElementById('user-input');
-const chatBox = document.getElementById('chat-box');
+const chat=document.getElementById("chat");
+const form=document.getElementById("form");
+const input=document.getElementById("input");
 
-let conversationHistory = [];
+let history=[];
 
-function appendMessage(text, isUser) {
-    const wrapper = document.createElement('div');
-    wrapper.className = `msg flex ${isUser ? "justify-end" : ""}`;
+function add(text,user){
+  const div=document.createElement("div");
+  div.className="msg flex "+(user?"justify-end":"");
 
-    const bubble = document.createElement('div');
+  div.innerHTML=`
+    <div class="
+      px-4 py-2 rounded-2xl max-w-[75%]
+      ${user ? "bg-blue-500 text-white rounded-br-sm" : "bg-zinc-800 text-white rounded-bl-sm"}
+    ">
+      ${text}
+    </div>
+  `;
 
-    bubble.className = isUser
-        ? "bg-[#005c4b] text-white p-3 rounded-xl rounded-tr-none shadow max-w-[80%]"
-        : "bg-[#202c33] text-white p-3 rounded-xl rounded-tl-none shadow max-w-[80%]";
-
-    bubble.innerText = text;
-
-    wrapper.appendChild(bubble);
-    chatBox.appendChild(wrapper);
-
-    chatBox.scrollTop = chatBox.scrollHeight;
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
 }
 
-chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+form.onsubmit=async(e)=>{
+  e.preventDefault();
+  if(!input.value) return;
 
-    const message = userInput.value.trim();
-    if (!message) return;
+  add(input.value,true);
+  history.push({role:"user",content:input.value});
+  input.value="";
 
-    appendMessage(message, true);
-    userInput.value = "";
+  const typing=document.createElement("div");
+  typing.className="msg text-zinc-400 text-sm px-2";
+  typing.innerText="A.N.S.H is typing…";
+  chat.appendChild(typing);
 
-    conversationHistory.push({ role: "user", content: message });
+  try{
+    const res=await fetch("/.netlify/functions/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({messages:history})
+    });
 
-    // typing indicator
-    const load = document.createElement('div');
-    load.className = "msg flex";
-    load.innerHTML = `
-        <div class="bg-[#202c33] p-3 rounded-xl text-slate-400 animate-pulse">
-            A.N.S.H is typing...
-        </div>`;
-    chatBox.appendChild(load);
+    const data=await res.json();
+    chat.removeChild(typing);
 
-    try {
-        const res = await fetch('/.netlify/functions/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: conversationHistory })
-        });
+    const reply=data.choices?.[0]?.message?.content || "No response";
+    add(reply,false);
 
-        const data = await res.json();
-        chatBox.removeChild(load);
-
-        const reply = data.choices?.[0]?.message?.content || "No response";
-        appendMessage(reply, false);
-
-        conversationHistory.push({ role: "assistant", content: reply });
-
-    } catch (err) {
-        chatBox.removeChild(load);
-        appendMessage("Connection error ⚠️", false);
-    }
-});
+    history.push({role:"assistant",content:reply);
+  }
+  catch(err){
+    chat.removeChild(typing);
+    add("Connection error ⚠️",false);
+  }
+}
 </script>
 
 </body>
