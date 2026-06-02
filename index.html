@@ -1,109 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A.N.S.H. AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #0f172a; color: #f8fafc; }
-        .chat-box::-webkit-scrollbar { width: 6px; }
-        .chat-box::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 3px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A.N.S.H. AI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+body {
+    background: radial-gradient(circle at top, #1e1b4b, #0f172a);
+    color: #f8fafc;
+    font-family: system-ui;
+}
+
+/* scroll */
+.chat-box::-webkit-scrollbar { width: 6px; }
+.chat-box::-webkit-scrollbar-thumb {
+    background-color: #334155;
+    border-radius: 3px;
+}
+
+/* message animation */
+.msg {
+    animation: pop 0.25s ease;
+}
+@keyframes pop {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* glass header */
+header {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+}
+</style>
 </head>
-<body class="h-screen flex flex-col justify-between font-sans">
 
-    <header class="border-b border-slate-800 p-4 text-center bg-slate-900/50 backdrop-blur">
-        <h1 class="text-2xl font-bold tracking-wider text-cyan-400">A.N.S.H.</h1>
-        <p class="text-xs text-slate-400 uppercase tracking-widest">Artificial Neural System and Helper</p>
-    </header>
+<body class="h-screen flex flex-col">
 
-    <main id="chat-box" class="chat-box flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl w-full mx-auto">
-        <div class="flex gap-3 max-w-[85%]">
-            <div class="bg-slate-800 p-3 rounded-2xl rounded-tl-none shadow-md">
-                Hello! I am A.N.S.H. How can I assist you today?
-            </div>
+<!-- HEADER -->
+<header class="border-b border-slate-800 p-4 text-center">
+    <h1 class="text-2xl font-bold tracking-wider text-cyan-400">A.N.S.H.</h1>
+    <p class="text-xs text-slate-400">Your AI Buddy 🚀</p>
+</header>
+
+<!-- CHAT AREA -->
+<main id="chat-box" class="chat-box flex-1 overflow-y-auto p-4 space-y-3 max-w-3xl w-full mx-auto">
+
+    <div class="msg flex">
+        <div class="bg-slate-800/70 backdrop-blur p-3 rounded-2xl rounded-tl-none shadow">
+            Yo 👋 I'm A.N.S.H. What’s up?
         </div>
-    </main>
+    </div>
 
-    <footer class="p-4 border-t border-slate-800 bg-slate-900/50 backdrop-blur">
-        <form id="chat-form" class="max-w-3xl w-full mx-auto flex gap-2">
-            <input type="text" id="user-input" placeholder="Ask A.N.S.H. anything..." autocomplete="off"
-                class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors">
-            <button type="submit" 
-                class="bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-6 py-3 rounded-xl transition-colors">
-                Send
-            </button>
-        </form>
-    </footer>
+</main>
 
-    <script>
-        const chatForm = document.getElementById('chat-form');
-        const userInput = document.getElementById('user-input');
-        const chatBox = document.getElementById('chat-box');
-        
-        // Context history array
-        let conversationHistory = [];
+<!-- INPUT -->
+<footer class="p-4 border-t border-slate-800 bg-slate-900/40 backdrop-blur">
+    <form id="chat-form" class="max-w-3xl mx-auto flex gap-2">
 
-        function appendMessage(text, isUser) {
-            const wrapper = document.createElement('div');
-            wrapper.className = isUser ? "flex gap-3 max-w-[85%] ml-auto justify-end" : "flex gap-3 max-w-[85%]";
-            
-            const msgBubble = document.createElement('div');
-            msgBubble.className = isUser 
-                ? "bg-cyan-600 p-3 rounded-2xl rounded-tr-none shadow-md text-white" 
-                : "bg-slate-800 p-3 rounded-2xl rounded-tl-none shadow-md text-slate-100";
-            
-            msgBubble.innerText = text;
-            wrapper.appendChild(msgBubble);
-            chatBox.appendChild(wrapper);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+        <input id="user-input"
+        type="text"
+        placeholder="Message A.N.S.H..."
+        class="flex-1 bg-slate-800/70 backdrop-blur border border-slate-700 rounded-full px-4 py-3 text-white outline-none focus:border-cyan-500">
 
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const message = userInput.value.trim();
-            if (!message) return;
+        <button class="bg-cyan-600 hover:bg-cyan-500 px-5 py-3 rounded-full font-medium">
+            Send
+        </button>
 
-            // Render user message
-            appendMessage(message, true);
-            userInput.value = '';
+    </form>
+</footer>
 
-            // Update conversation history
-            conversationHistory.push({ role: "user", content: message });
+<script>
+const chatForm = document.getElementById('chat-form');
+const userInput = document.getElementById('user-input');
+const chatBox = document.getElementById('chat-box');
 
-            // Create loading placeholder for AI
-            const loadingWrapper = document.createElement('div');
-            loadingWrapper.className = "flex gap-3 max-w-[85%]";
-            loadingWrapper.innerHTML = `<div class="bg-slate-800 p-3 rounded-2xl rounded-tl-none text-slate-400 animate-pulse">A.N.S.H. is thinking...</div>`;
-            chatBox.appendChild(loadingWrapper);
-            chatBox.scrollTop = chatBox.scrollHeight;
+let conversationHistory = [];
 
-            try {
-                // Call Netlify background function
-                const response = await fetch('/.netlify/functions/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: conversationHistory })
-                });
+function appendMessage(text, isUser) {
+    const wrapper = document.createElement('div');
+    wrapper.className = `msg flex ${isUser ? "justify-end" : ""}`;
 
-                const data = await response.json();
-                chatBox.removeChild(loadingWrapper); // Remove typing indicator
+    const bubble = document.createElement('div');
 
-                if (data.choices && data.choices[0].message) {
-                    const aiReply = data.choices[0].message.content;
-                    appendMessage(aiReply, false);
-                    conversationHistory.push({ role: "assistant", content: aiReply });
-                } else {
-                    appendMessage("Error: Could not retrieve a proper response.", false);
-                }
+    bubble.className = isUser
+        ? "bg-cyan-600 text-white p-3 rounded-2xl rounded-tr-none shadow max-w-[80%]"
+        : "bg-slate-800/70 backdrop-blur p-3 rounded-2xl rounded-tl-none shadow max-w-[80%]";
 
-            } catch (err) {
-                chatBox.removeChild(loadingWrapper);
-                appendMessage("Failed to reach A.N.S.H. Check connection.", false);
-                console.error(err);
-            }
+    bubble.innerText = text;
+
+    wrapper.appendChild(bubble);
+    chatBox.appendChild(wrapper);
+
+    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: "smooth" });
+}
+
+chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    appendMessage(message, true);
+    userInput.value = "";
+
+    conversationHistory.push({ role: "user", content: message });
+
+    // loading
+    const load = document.createElement('div');
+    load.className = "msg flex";
+    load.innerHTML = `<div class="bg-slate-800 p-3 rounded-2xl text-slate-400 animate-pulse">A.N.S.H. thinking... ⚡</div>`;
+    chatBox.appendChild(load);
+
+    try {
+        const res = await fetch('/.netlify/functions/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: conversationHistory })
         });
-    </script>
+
+        const data = await res.json();
+        chatBox.removeChild(load);
+
+        const reply = data.choices?.[0]?.message?.content || "No response";
+        appendMessage(reply, false);
+
+        conversationHistory.push({ role: "assistant", content: reply });
+
+    } catch (err) {
+        chatBox.removeChild(load);
+        appendMessage("Error connecting to A.N.S.H.", false);
+    }
+});
+</script>
+
 </body>
 </html>
