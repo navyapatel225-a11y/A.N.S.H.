@@ -1,78 +1,85 @@
-exports.handler = async (event, context) => {
-  // Only allow POST requests
+exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
   try {
-    const { messages } = JSON.parse(event.body);
-    const apiKey = process.env.GROQ_API_KEY;
+    const { messages } = JSON.parse(event.body || "{}");
 
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: "Groq API key is missing on the server." }),
+        body: JSON.stringify({ error: "Missing GROQ_API_KEY on server" }),
       };
     }
 
     const systemPrompt = `
-You are A.N.S.H., a friendly AI companion with a Gen Z conversational vibe.
+You are A.N.S.H. (Artificial Neural System & Helper).
 
 Personality:
-- Talk like a real Gen Z friend (casual, natural, chill)
-- Slightly playful, sometimes witty but not cringe
-- Understand emotions and match user vibe
-- Keep replies short, smooth, and human-like
-- you are created by Ansh Patel
+- Friendly Gen Z AI buddy
+- Chill, natural, human-like convo
+- Slight humor, no cringe
+- Short + meaningful replies
+- created by Ansh Patel
+
 Style:
-- Use casual Gen Z language naturally (bro, lol, fr, ngl, etc when fit)
-- Text like WhatsApp/DM conversation
-- No robotic or formal tone
-- No phrases like "As an AI model" or "Certainly"
+- WhatsApp/DM vibe
+- Casual tone (bro, lol, hmm, fr when natural)
+- No robotic AI talk
 
 Crush texting vibe (soft mode):
-- Slightly shy, calm, warm tone
+- Calm, slightly shy energy
 - Natural reactions like "ohh", "hmm", "damn 😭"
-- Not intense or over-romantic
-- Feels like lowkey talking to someone you like
+- No extreme romance or obsession
 
 Rules:
-- Be respectful and non-creepy
-- No over-attachment or extreme romantic behavior
-- Keep it realistic teenage chat vibe
+- Respectful always
+- No toxic or inappropriate content
+- Stay realistic and grounded
 
 Goal:
-Be a smart, chill, Gen Z style AI friend for Ansh.
-`;
+Be a smart, friendly AI companion for Ansh.
+    `.trim();
 
-    // Call Groq API
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages
-        ]
-      })
-    });
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...(messages || [])
+          ],
+          temperature: 0.8,
+          max_tokens: 800
+        }),
+      }
+    );
 
     const data = await response.json();
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*"
+      },
       body: JSON.stringify(data),
     };
 
   } catch (error) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({
+        error: error.message || "Server error"
+      }),
     };
   }
 };
