@@ -6,8 +6,9 @@
     <title>A.N.S.H. | Neural Helper</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <style>
         body { background-color: #0b1120; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
@@ -40,9 +41,29 @@
             <h1 class="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">A.N.S.H.</h1>
             <p class="text-[10px] text-cyan-500/70 uppercase tracking-widest font-mono mt-0.5">Artificial Neural System & Helper</p>
         </div>
-        <button onclick="clearChat()" class="text-xs font-medium text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition-all">
-            Clear Memory
-        </button>
+        
+        <div class="flex items-center gap-4">
+            <button onclick="clearChat()" class="text-xs font-medium text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition-all">
+                Clear Memory
+            </button>
+            
+            <div id="g_id_onload"
+                 data-client_id="1082760273575-05b9mu8fed1k8mhbs0igr2ic9jhk68k5.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="handleGoogleLogin"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-text="signin_with" data-shape="rectangular" data-logo_alignment="left"></div>
+
+            <div id="user-profile" class="hidden flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-full pl-2 pr-4 py-1">
+                <img id="user-avatar" src="" alt="User Avatar" class="w-6 h-6 rounded-full border border-slate-600">
+                <span id="user-name" class="text-xs font-medium text-slate-300"></span>
+                <button onclick="signOut()" class="text-slate-500 hover:text-red-400 ml-2" title="Sign Out">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                </button>
+            </div>
+        </div>
     </header>
 
     <main id="chat-box" class="chat-scroll flex-1 overflow-y-auto p-4 md:p-6 space-y-6 w-full max-w-4xl mx-auto scroll-smooth">
@@ -76,6 +97,41 @@
         const sendBtn = document.getElementById('send-btn');
         
         let conversationHistory = [];
+
+        // --- Google Sign-In Logic ---
+        
+        function decodeJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function handleGoogleLogin(response) {
+            const responsePayload = decodeJwtResponse(response.credential);
+            
+            // Hide the Google button, show the user profile
+            document.querySelector('.g_id_signin').classList.add('hidden');
+            const profileDiv = document.getElementById('user-profile');
+            profileDiv.classList.remove('hidden');
+            
+            // Update UI with Google account data
+            document.getElementById('user-avatar').src = responsePayload.picture;
+            document.getElementById('user-name').innerText = responsePayload.given_name;
+
+            // Make A.N.S.H. greet the user
+            appendMessage(`Hello, ${responsePayload.given_name}. Your identity has been verified. How can I assist you?`, false);
+        }
+
+        function signOut() {
+            document.querySelector('.g_id_signin').classList.remove('hidden');
+            document.getElementById('user-profile').classList.add('hidden');
+            appendMessage("User signed out. Systems standing by.", false);
+        }
+
+        // --- Core Chat Logic ---
 
         // Scroll to bottom smoothly
         function scrollToBottom() {
