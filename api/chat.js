@@ -41,7 +41,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile", // Groq's smartest model
+        model: "llama-3.1-8b-instant", // Groq's smartest model
         messages: [systemInstruction, ...messages],
         temperature: 0.7, // Balances creativity with logic (0 = robotic, 1 = chaotic)
         max_tokens: 2048, // Allows for nicely detailed responses
