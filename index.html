@@ -4,185 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A.N.S.H. | Neural Helper</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
     <style>
-        body { background-color: #0b1120; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
-        .chat-scroll::-webkit-scrollbar { width: 6px; }
-        .chat-scroll::-webkit-scrollbar-track { background: transparent; }
-        .chat-scroll::-webkit-scrollbar-thumb { background-color: #1e293b; border-radius: 10px; }
-        .prose pre { background-color: #0f172a; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 0.5rem 0; }
-        .prose code { color: #38bdf8; font-family: monospace; font-size: 0.9em; }
-        .prose p { margin-bottom: 0.5rem; }
-        .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
-        .prose strong { color: #fff; font-weight: 600; }
-        .dot-flashing { position: relative; width: 6px; height: 6px; border-radius: 3px; background-color: #06b6d4; animation: dot-flashing 1s infinite linear alternate; animation-delay: 0.5s; margin-left: 15px; }
-        .dot-flashing::before, .dot-flashing::after { content: ''; display: inline-block; position: absolute; top: 0; width: 6px; height: 6px; border-radius: 3px; background-color: #06b6d4; animation: dot-flashing 1s infinite alternate; }
-        .dot-flashing::before { left: -10px; animation-delay: 0s; }
-        .dot-flashing::after { left: 10px; animation-delay: 1s; }
-        @keyframes dot-flashing { 0% { background-color: #06b6d4; } 50%, 100% { background-color: rgba(6, 182, 212, 0.2); } }
+        /* Base page styling with deep purple background and off-white text */
+        body { background-color: #1a162e; color: #f8fafc; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; }
+        
+        /* Refined Custom Scrollbar with warm amber thumb and deep track */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a162e; border-radius: 10px;}
+        ::-webkit-scrollbar-thumb { background-color: #f59e0b; border-radius: 10px; border: 2px solid #1a162e;}
+        ::-webkit-scrollbar-thumb:hover { background-color: #fbbf24; }
+        
+        /* Markdown formatting rules for AI responses, ensuring proper spacing and colors */
+        .prose pre { background-color: #111827; padding: 1.25rem; border-radius: 0.75rem; overflow-x: auto; margin-top: 0.75rem; margin-bottom: 0.75rem; border: 1px solid #374151; }
+        .prose code { color: #facc15; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.9em; }
+        .prose p { margin-bottom: 0.75rem; }
+        .prose ul { list-style-type: disc; padding-left: 1.75rem; margin-bottom: 0.75rem; }
+        .prose ol { list-style-type: decimal; padding-left: 1.75rem; margin-bottom: 0.75rem; }
+        .prose strong { color: #fff; font-weight: 700; }
+        .prose h1, .prose h2, .prose h3 { color: #fbbf24; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.75rem;}
+        .prose h1 { font-size: 1.5rem; }
+        .prose h2 { font-size: 1.25rem; }
+        .prose h3 { font-size: 1.125rem; }
+        
+        /* Faster and cleaner dot-flashing typing animation with amber color */
+        .dot-flashing { position: relative; width: 8px; height: 8px; border-radius: 5px; background-color: #f59e0b; color: #f59e0b; animation: dot-flashing 0.8s infinite linear alternate; animation-delay: 0.4s; margin-left: 15px; }
+        .dot-flashing::before, .dot-flashing::after { content: ''; display: inline-block; position: absolute; top: 0; width: 8px; height: 8px; border-radius: 5px; background-color: #f59e0b; color: #f59e0b; animation: dot-flashing 0.8s infinite alternate; }
+        .dot-flashing::before { left: -12px; animation-delay: 0s; }
+        .dot-flashing::after { left: 12px; animation-delay: 0.8s; }
+        @keyframes dot-flashing { 0% { background-color: #f59e0b; } 50%, 100% { background-color: rgba(245, 158, 11, 0.2); } }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]">
+<body class="h-screen flex flex-col overflow-hidden">
 
-    <header class="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
-        <div>
-            <h1 class="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">A.N.S.H.</h1>
-            <p class="text-[10px] text-cyan-500/70 uppercase tracking-widest font-mono mt-0.5">Artificial Neural System & Helper</p>
-        </div>
-        <button onclick="clearChat()" class="text-xs font-medium text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition-all">Clear Memory</button>
-    </header>
-
-    <main id="chat-box" class="chat-scroll flex-1 overflow-y-auto p-4 md:p-6 space-y-6 w-full max-w-4xl mx-auto scroll-smooth">
-        <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
-            <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
-                <p>System initialized. I am <strong>A.N.S.H.</strong> How can I assist you today?</p>
+    <header class="p-5 border-b border-purple-900 bg-purple-950/90 z-10">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="text-center sm:text-left">
+                <h1 class="text-3xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-amber-400 drop-shadow-md">A.N.S.H.</h1>
+                <p class="text-xs text-amber-300 uppercase tracking-widest font-mono mt-1">Artificial Neural System & Helper</p>
             </div>
-        </div>
-    </main>
-
-    <footer class="p-4 md:p-6 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
-        <form id="chat-form" class="max-w-4xl w-full mx-auto relative flex items-center">
-            <input type="text" id="user-input" placeholder="Initiate query..." autocomplete="off" class="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-5 pr-16 py-4 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all shadow-inner">
-            <button type="submit" id="send-btn" class="absolute right-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white p-2.5 rounded-xl transition-all shadow-md flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" /></svg>
+            <button onclick="clearChat()" class="text-sm font-semibold text-amber-100 hover:text-white px-5 py-2.5 rounded-xl border border-amber-500/50 hover:border-amber-400 hover:bg-amber-600/20 transition-all shadow-md">
+                Clear Memory
             </button>
-        </form>
-        <p class="text-center text-[10px] text-slate-500 mt-3 font-mono">A.N.S.H. v3.0 - Powered by Groq & Vercel</p>
-    </footer>
-
-    <script>
-        const chatForm = document.getElementById('chat-form');
-        const userInput = document.getElementById('user-input');
-        const chatBox = document.getElementById('chat-box');
-        const sendBtn = document.getElementById('send-btn');
-        let conversationHistory = [];
-
-        function scrollToBottom() { chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' }); }
-
-        function clearChat() {
-            conversationHistory = [];
-            chatBox.innerHTML = `
-                <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
-                    <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
-                        <p>Memory wiped. Systems refreshed. Ready for new input.</p>
-                    </div>
-                </div>`;
-        }
-
-        function appendMessage(text, isUser) {
-            const wrapper = document.createElement('div');
-            wrapper.className = isUser ? "flex gap-4 w-full max-w-[90%] md:max-w-[80%] ml-auto justify-end" : "flex gap-4 w-full max-w-[90%] md:max-w-[80%]";
-            
-            const avatar = document.createElement('div');
-            avatar.className = isUser ? "w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-sm shrink-0 order-last" : "w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0";
-            avatar.innerText = isUser ? "U" : "A";
-
-            const msgBubble = document.createElement('div');
-            msgBubble.className = isUser ? "bg-slate-700 p-4 rounded-2xl rounded-tr-sm shadow-sm text-white" : "bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200 overflow-hidden w-full";
-            
-            if (isUser) { msgBubble.innerText = text; } 
-            else { msgBubble.innerHTML = marked.parse(text); }
-
-            wrapper.appendChild(avatar);
-            wrapper.appendChild(msgBubble);
-            chatBox.appendChild(wrapper);
-            scrollToBottom();
-        }
-
-        function showLoading() {
-            const wrapper = document.createElement('div');
-            wrapper.id = "loading-indicator";
-            wrapper.className = "flex gap-4 w-full max-w-[90%] md:max-w-[80%]";
-            wrapper.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
-                <div class="bg-slate-800/80 border border-slate-700 py-5 px-6 rounded-2xl rounded-tl-sm flex items-center">
-                    <div class="dot-flashing"></div>
-                </div>`;
-            chatBox.appendChild(wrapper);
-            scrollToBottom();
-        }
-
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            userInput.value = '';
-            userInput.disabled = true;
-            sendBtn.disabled = true;
-            sendBtn.classList.add('opacity-50');
-
-            appendMessage(message, true);
-            conversationHistory.push({ role: "user", content: message });
-            showLoading();
-
-            try {
-                // Ensure we are fetching the internal Vercel API
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: conversationHistory })
-                });
-
-                const data = await response.json();
-                document.getElementById('loading-indicator').remove();
-
-                if (response.ok && data.choices && data.choices[0].message) {
-                    const aiReply = data.choices[0].message.content;
-                    appendMessage(aiReply, false);
-                    conversationHistory.push({ role: "assistant", content: aiReply });
-                } else {
-                    appendMessage(`**Error:** ${data.error || 'Unknown error occurred.'}`, false);
-                }
-            } catch (err) {
-                document.getElementById('loading-indicator')?.remove();
-                appendMessage("**System Error:** Failed to establish connection to neural net.", false);
-                console.error(err);
-            } finally {
-                userInput.disabled = false;
-                sendBtn.disabled = false;
-                sendBtn.classList.remove('opacity-50');
-                userInput.focus();
-            }
-        });
-    </script>
-</body>
-</html>
-    <header class="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
-        <div>
-            <h1 class="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">A.N.S.H.</h1>
-            <p class="text-[10px] text-cyan-500/70 uppercase tracking-widest font-mono mt-0.5">Artificial Neural System & Helper</p>
         </div>
-        <button onclick="clearChat()" class="text-xs font-medium text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition-all">
-            Clear Memory
-        </button>
     </header>
 
-    <main id="chat-box" class="chat-scroll flex-1 overflow-y-auto p-4 md:p-6 space-y-6 w-full max-w-4xl mx-auto scroll-smooth">
-        <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
-            <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
+    <main id="chat-box" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 w-full max-w-5xl mx-auto scroll-smooth">
+        <div class="flex gap-4 w-full max-w-[95%] md:max-w-[85%] items-start">
+            <div class="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center font-bold text-xl shadow-lg shadow-amber-500/30 shrink-0 text-white border-2 border-amber-300">A</div>
+            <div class="bg-neutral-900 border border-purple-900 p-5 rounded-3xl rounded-tl-lg shadow-xl prose text-slate-100 max-w-full overflow-hidden">
                 <p>System initialized. I am <strong>A.N.S.H.</strong> How can I assist you today?</p>
             </div>
         </div>
     </main>
 
-    <footer class="p-4 md:p-6 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
-        <form id="chat-form" class="max-w-4xl w-full mx-auto relative flex items-center">
+    <footer class="p-5 md:p-8 border-t border-purple-900 bg-purple-950/90 z-10">
+        <form id="chat-form" class="max-w-5xl w-full mx-auto flex items-center gap-4 relative">
             <input type="text" id="user-input" placeholder="Initiate query..." autocomplete="off"
-                class="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-5 pr-16 py-4 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all shadow-inner">
+                class="flex-1 bg-purple-950 border border-purple-900 rounded-3xl px-6 py-4.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all shadow-inner text-lg pr-20">
             
             <button type="submit" id="send-btn"
-                class="absolute right-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white p-2.5 rounded-xl transition-all shadow-md flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                class="absolute right-3 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-500 text-purple-950 p-3.5 rounded-full transition-all shadow-lg flex items-center justify-center border-2 border-amber-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7">
                     <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
                 </svg>
             </button>
         </form>
-        <p class="text-center text-[10px] text-slate-500 mt-3 font-mono">A.N.S.H. v2.0 - Powered by Groq & Vercel</p>
+        <p class="text-center text-[10px] text-purple-600 mt-4 font-mono">A.N.S.H. v3.1 - Refined Interface Powered by Groq & Vercel</p>
     </footer>
 
     <script>
@@ -193,44 +85,46 @@
         
         let conversationHistory = [];
 
-        // Scroll to bottom smoothly
+        // Smooth scroll to the bottom of the chat container
         function scrollToBottom() {
             chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
         }
 
-        // Clear chat function
+        // Function to clear chat history and reset conversation, including greeting
         function clearChat() {
             conversationHistory = [];
             chatBox.innerHTML = `
-                <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
-                    <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
+                <div class="flex gap-4 w-full max-w-[95%] md:max-w-[85%] items-start">
+                    <div class="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center font-bold text-xl shadow-lg shadow-amber-500/30 shrink-0 text-white border-2 border-amber-300">A</div>
+                    <div class="bg-neutral-900 border border-purple-900 p-5 rounded-3xl rounded-tl-lg shadow-xl prose text-slate-100 max-w-full overflow-hidden">
                         <p>Memory wiped. Systems refreshed. Ready for new input.</p>
                     </div>
                 </div>
             `;
+            scrollToBottom();
         }
 
+        // Dynamically append a message to the chat with distinct user/AI styling
         function appendMessage(text, isUser) {
             const wrapper = document.createElement('div');
             wrapper.className = isUser 
-                ? "flex gap-4 w-full max-w-[90%] md:max-w-[80%] ml-auto justify-end" 
-                : "flex gap-4 w-full max-w-[90%] md:max-w-[80%]";
+                ? "flex gap-4 w-full max-w-[95%] md:max-w-[85%] ml-auto justify-end items-end" 
+                : "flex gap-4 w-full max-w-[95%] md:max-w-[85%] items-start";
             
-            // Avatar
+            // Avatar styling: Different background for User/AI
             const avatar = document.createElement('div');
             avatar.className = isUser
-                ? "w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-sm shrink-0 order-last"
-                : "w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0";
+                ? "w-10 h-10 rounded-full bg-purple-800 flex items-center justify-center font-bold text-xl shrink-0 order-last text-white border-2 border-purple-700"
+                : "w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center font-bold text-xl shadow-lg shadow-amber-500/30 shrink-0 text-white border-2 border-amber-300";
             avatar.innerText = isUser ? "U" : "A";
 
-            // Bubble
+            // Message bubble styling: Amber border accent for User, deep grey for AI
             const msgBubble = document.createElement('div');
             msgBubble.className = isUser 
-                ? "bg-slate-700 p-4 rounded-2xl rounded-tr-sm shadow-sm text-white" 
-                : "bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200 overflow-hidden w-full";
+                ? "bg-purple-900 border border-purple-900 p-5 rounded-3xl rounded-br-lg shadow-xl text-slate-100 max-w-full overflow-hidden text-lg text-right border-r-2 border-amber-400" 
+                : "bg-neutral-900 border border-purple-900 p-5 rounded-3xl rounded-tl-lg shadow-xl prose text-slate-100 max-w-full overflow-hidden";
             
-            // Render text normally for User, use Markdown for AI
+            // User message is raw text, AI message is parsed as Markdown via Marked.js
             if (isUser) {
                 msgBubble.innerText = text;
             } else {
@@ -243,13 +137,14 @@
             scrollToBottom();
         }
 
+        // Show animated typing indicator for AI with refined styling
         function showLoading() {
             const wrapper = document.createElement('div');
             wrapper.id = "loading-indicator";
-            wrapper.className = "flex gap-4 w-full max-w-[90%] md:max-w-[80%]";
+            wrapper.className = "flex gap-4 w-full max-w-[95%] md:max-w-[85%] items-start";
             wrapper.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
-                <div class="bg-slate-800/80 border border-slate-700 py-5 px-6 rounded-2xl rounded-tl-sm flex items-center">
+                <div class="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center font-bold text-xl shadow-lg shadow-amber-500/30 shrink-0 text-white border-2 border-amber-300">A</div>
+                <div class="bg-neutral-900 border border-purple-900 py-6 px-7 rounded-3xl rounded-tl-lg flex items-center shadow-xl">
                     <div class="dot-flashing"></div>
                 </div>
             `;
@@ -257,16 +152,16 @@
             scrollToBottom();
         }
 
+        // Handle chat form submission: Append user message, call API, update history, handle response/errors
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const message = userInput.value.trim();
             if (!message) return;
 
-            // Disable input while processing
+            // Clear input and disable elements during processing
             userInput.value = '';
             userInput.disabled = true;
             sendBtn.disabled = true;
-            sendBtn.classList.add('opacity-50');
 
             appendMessage(message, true);
             conversationHistory.push({ role: "user", content: message });
@@ -274,7 +169,7 @@
             showLoading();
 
             try {
-                // Ensure this matches your Vercel endpoint format
+                // Call the Vercel backend function securely, passing conversation history
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -283,7 +178,7 @@
 
                 const data = await response.json();
                 
-                // Remove loading indicator
+                // Remove typing indicator before appending AI response or error
                 document.getElementById('loading-indicator').remove();
 
                 if (response.ok && data.choices && data.choices[0].message) {
@@ -291,18 +186,18 @@
                     appendMessage(aiReply, false);
                     conversationHistory.push({ role: "assistant", content: aiReply });
                 } else {
-                    appendMessage(`**Error:** ${data.error || 'Could not retrieve response.'}`, false);
+                    appendMessage(`**Error:** ${data.error || 'Could not retrieve response from A.N.S.H. neural net.'}`, false);
                 }
 
             } catch (err) {
+                // Handle potential connection or other fatal errors
                 document.getElementById('loading-indicator')?.remove();
                 appendMessage("**System Error:** Failed to establish connection to neural net.", false);
                 console.error(err);
             } finally {
-                // Re-enable input
+                // Re-enable input and button, restoring focus to input field
                 userInput.disabled = false;
                 sendBtn.disabled = false;
-                sendBtn.classList.remove('opacity-50');
                 userInput.focus();
             }
         });
