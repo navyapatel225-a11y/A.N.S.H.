@@ -4,30 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A.N.S.H. | Neural Helper</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
     <style>
         body { background-color: #0b1120; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
-        
-        /* Custom Scrollbar */
         .chat-scroll::-webkit-scrollbar { width: 6px; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
         .chat-scroll::-webkit-scrollbar-thumb { background-color: #1e293b; border-radius: 10px; }
-        
-        /* Markdown formatting rules for the AI's responses */
-        .prose pre { background-color: #0f172a; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+        .prose pre { background-color: #0f172a; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 0.5rem 0; }
         .prose code { color: #38bdf8; font-family: monospace; font-size: 0.9em; }
         .prose p { margin-bottom: 0.5rem; }
         .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
-        .prose ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.5rem; }
         .prose strong { color: #fff; font-weight: 600; }
-        
-        /* Typing animation */
-        .dot-flashing { position: relative; width: 6px; height: 6px; border-radius: 3px; background-color: #06b6d4; color: #06b6d4; animation: dot-flashing 1s infinite linear alternate; animation-delay: 0.5s; margin-left: 15px; }
-        .dot-flashing::before, .dot-flashing::after { content: ''; display: inline-block; position: absolute; top: 0; width: 6px; height: 6px; border-radius: 3px; background-color: #06b6d4; color: #06b6d4; animation: dot-flashing 1s infinite alternate; }
+        .dot-flashing { position: relative; width: 6px; height: 6px; border-radius: 3px; background-color: #06b6d4; animation: dot-flashing 1s infinite linear alternate; animation-delay: 0.5s; margin-left: 15px; }
+        .dot-flashing::before, .dot-flashing::after { content: ''; display: inline-block; position: absolute; top: 0; width: 6px; height: 6px; border-radius: 3px; background-color: #06b6d4; animation: dot-flashing 1s infinite alternate; }
         .dot-flashing::before { left: -10px; animation-delay: 0s; }
         .dot-flashing::after { left: 10px; animation-delay: 1s; }
         @keyframes dot-flashing { 0% { background-color: #06b6d4; } 50%, 100% { background-color: rgba(6, 182, 212, 0.2); } }
@@ -35,6 +25,132 @@
 </head>
 <body class="h-screen flex flex-col overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]">
 
+    <header class="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
+        <div>
+            <h1 class="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">A.N.S.H.</h1>
+            <p class="text-[10px] text-cyan-500/70 uppercase tracking-widest font-mono mt-0.5">Artificial Neural System & Helper</p>
+        </div>
+        <button onclick="clearChat()" class="text-xs font-medium text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition-all">Clear Memory</button>
+    </header>
+
+    <main id="chat-box" class="chat-scroll flex-1 overflow-y-auto p-4 md:p-6 space-y-6 w-full max-w-4xl mx-auto scroll-smooth">
+        <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
+            <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
+                <p>System initialized. I am <strong>A.N.S.H.</strong> How can I assist you today?</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="p-4 md:p-6 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
+        <form id="chat-form" class="max-w-4xl w-full mx-auto relative flex items-center">
+            <input type="text" id="user-input" placeholder="Initiate query..." autocomplete="off" class="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-5 pr-16 py-4 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all shadow-inner">
+            <button type="submit" id="send-btn" class="absolute right-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white p-2.5 rounded-xl transition-all shadow-md flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" /></svg>
+            </button>
+        </form>
+        <p class="text-center text-[10px] text-slate-500 mt-3 font-mono">A.N.S.H. v3.0 - Powered by Groq & Vercel</p>
+    </footer>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+        const sendBtn = document.getElementById('send-btn');
+        let conversationHistory = [];
+
+        function scrollToBottom() { chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' }); }
+
+        function clearChat() {
+            conversationHistory = [];
+            chatBox.innerHTML = `
+                <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
+                    <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
+                        <p>Memory wiped. Systems refreshed. Ready for new input.</p>
+                    </div>
+                </div>`;
+        }
+
+        function appendMessage(text, isUser) {
+            const wrapper = document.createElement('div');
+            wrapper.className = isUser ? "flex gap-4 w-full max-w-[90%] md:max-w-[80%] ml-auto justify-end" : "flex gap-4 w-full max-w-[90%] md:max-w-[80%]";
+            
+            const avatar = document.createElement('div');
+            avatar.className = isUser ? "w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-sm shrink-0 order-last" : "w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0";
+            avatar.innerText = isUser ? "U" : "A";
+
+            const msgBubble = document.createElement('div');
+            msgBubble.className = isUser ? "bg-slate-700 p-4 rounded-2xl rounded-tr-sm shadow-sm text-white" : "bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200 overflow-hidden w-full";
+            
+            if (isUser) { msgBubble.innerText = text; } 
+            else { msgBubble.innerHTML = marked.parse(text); }
+
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(msgBubble);
+            chatBox.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        function showLoading() {
+            const wrapper = document.createElement('div');
+            wrapper.id = "loading-indicator";
+            wrapper.className = "flex gap-4 w-full max-w-[90%] md:max-w-[80%]";
+            wrapper.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
+                <div class="bg-slate-800/80 border border-slate-700 py-5 px-6 rounded-2xl rounded-tl-sm flex items-center">
+                    <div class="dot-flashing"></div>
+                </div>`;
+            chatBox.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            userInput.value = '';
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+            sendBtn.classList.add('opacity-50');
+
+            appendMessage(message, true);
+            conversationHistory.push({ role: "user", content: message });
+            showLoading();
+
+            try {
+                // Ensure we are fetching the internal Vercel API
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: conversationHistory })
+                });
+
+                const data = await response.json();
+                document.getElementById('loading-indicator').remove();
+
+                if (response.ok && data.choices && data.choices[0].message) {
+                    const aiReply = data.choices[0].message.content;
+                    appendMessage(aiReply, false);
+                    conversationHistory.push({ role: "assistant", content: aiReply });
+                } else {
+                    appendMessage(`**Error:** ${data.error || 'Unknown error occurred.'}`, false);
+                }
+            } catch (err) {
+                document.getElementById('loading-indicator')?.remove();
+                appendMessage("**System Error:** Failed to establish connection to neural net.", false);
+                console.error(err);
+            } finally {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('opacity-50');
+                userInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
     <header class="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
         <div>
             <h1 class="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">A.N.S.H.</h1>
