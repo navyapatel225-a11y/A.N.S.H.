@@ -8,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
-    <!-- Google Identity Services Script -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <style>
@@ -19,7 +18,7 @@
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
         .chat-scroll::-webkit-scrollbar-thumb { background-color: #1e293b; border-radius: 10px; }
         
-        /* Markdown formatting rules for the AI's responses */
+        /* Markdown formatting rules */
         .prose pre { background-color: #0f172a; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-top: 0.5rem; margin-bottom: 0.5rem; }
         .prose code { color: #38bdf8; font-family: monospace; font-size: 0.9em; }
         .prose p { margin-bottom: 0.5rem; }
@@ -37,7 +36,6 @@
 </head>
 <body class="h-screen flex flex-col overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]">
 
-    <!-- Header Area -->
     <header class="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
         <div>
             <h1 class="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">A.N.S.H.</h1>
@@ -45,75 +43,62 @@
         </div>
         
         <div class="flex items-center gap-4">
-            <!-- Hidden until logged in -->
-            <button id="clear-btn" onclick="clearChat()" class="hidden text-xs font-medium text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition-all">
+            <button onclick="clearChat()" class="text-xs font-medium text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition-all">
                 Clear Memory
             </button>
+            
+            <div id="g_id_onload"
+                 data-client_id="1082760273575-05b9mu8fed1k8mhbs0igr2ic9jhk68k5.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="handleGoogleLogin"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-text="signin_with" data-shape="rectangular" data-logo_alignment="left"></div>
 
-            <!-- User Profile (Hidden by default) -->
             <div id="user-profile" class="hidden flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-full pl-2 pr-4 py-1">
                 <img id="user-avatar" src="" alt="User Avatar" class="w-6 h-6 rounded-full border border-slate-600">
                 <span id="user-name" class="text-xs font-medium text-slate-300"></span>
-                <button onclick="signOut()" class="text-slate-500 hover:text-red-400 ml-2" title="Lock System">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+                <button onclick="signOut()" class="text-slate-500 hover:text-red-400 ml-2" title="Sign Out">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- LOGIN SCREEN (Visible by default) -->
-    <div id="login-screen" class="flex-1 flex flex-col items-center justify-center p-6 text-center z-20">
-        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-2xl shadow-lg shadow-cyan-500/20 mb-6 text-white">A</div>
-        <h2 class="text-2xl font-bold text-slate-200 mb-2">Authentication Required</h2>
-        <p class="text-slate-400 mb-8 max-w-sm text-sm">You must verify your identity to access the A.N.S.H. network.</p>
-        
-        <!-- Google Login Core (Using your exact Client ID) -->
-        <div id="g_id_onload"
-             data-client_id="1082760273575-05b9mu8fed1k8mhbs0igr2ic9jhk68k5.apps.googleusercontent.com"
-             data-context="signin"
-             data-ux_mode="popup"
-             data-callback="handleGoogleLogin"
-             data-auto_prompt="false">
+    <main id="chat-box" class="chat-scroll flex-1 overflow-y-auto p-4 md:p-6 space-y-6 w-full max-w-4xl mx-auto scroll-smooth">
+        <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
+            <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
+                <p>System initialized. I am <strong>A.N.S.H.</strong> How can I assist you today?</p>
+            </div>
         </div>
-        <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-text="signin_with" data-shape="pill" data-logo_alignment="left"></div>
-    </div>
+    </main>
 
-    <!-- CHAT INTERFACE (Hidden by default) -->
-    <div id="chat-interface" class="hidden flex-col flex-1 overflow-hidden w-full">
-        <main id="chat-box" class="chat-scroll flex-1 overflow-y-auto p-4 md:p-6 space-y-6 w-full max-w-4xl mx-auto scroll-smooth">
-            <!-- Initial Greeting injected by JS upon login -->
-        </main>
-
-        <footer class="p-4 md:p-6 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
-            <form id="chat-form" class="max-w-4xl w-full mx-auto relative flex items-center">
-                <input type="text" id="user-input" placeholder="Initiate query..." autocomplete="off"
-                    class="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-5 pr-16 py-4 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all shadow-inner">
-                
-                <button type="submit" id="send-btn"
-                    class="absolute right-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white p-2.5 rounded-xl transition-all shadow-md flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                        <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
-                    </svg>
-                </button>
-            </form>
-            <p class="text-center text-[10px] text-slate-500 mt-3 font-mono">A.N.S.H. v2.0 - Powered by K1N6_AN$H</p>
-        </footer>
-    </div>
+    <footer class="p-4 md:p-6 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
+        <form id="chat-form" class="max-w-4xl w-full mx-auto relative flex items-center">
+            <input type="text" id="user-input" placeholder="Initiate query..." autocomplete="off"
+                class="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-5 pr-16 py-4 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all shadow-inner">
+            
+            <button type="submit" id="send-btn"
+                class="absolute right-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white p-2.5 rounded-xl transition-all shadow-md flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                    <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+                </svg>
+            </button>
+        </form>
+        <p class="text-center text-[10px] text-slate-500 mt-3 font-mono">A.N.S.H. v2.0 - Powered by K1N6_AN$H</p>
+    </footer>
 
     <script>
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
         const chatBox = document.getElementById('chat-box');
         const sendBtn = document.getElementById('send-btn');
-        const loginScreen = document.getElementById('login-screen');
-        const chatInterface = document.getElementById('chat-interface');
-        const clearBtn = document.getElementById('clear-btn');
-        const userProfile = document.getElementById('user-profile');
         
         let conversationHistory = [];
 
         // --- Google Sign-In Logic ---
-        
         function decodeJwtResponse(token) {
             let base64Url = token.split('.')[1];
             let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -126,49 +111,23 @@
         function handleGoogleLogin(response) {
             const responsePayload = decodeJwtResponse(response.credential);
             
-            // 1. Hide Login Screen, Show Chat Interface
-            loginScreen.classList.add('hidden');
-            chatInterface.classList.remove('hidden');
-            chatInterface.classList.add('flex');
+            document.querySelector('.g_id_signin').classList.add('hidden');
+            const profileDiv = document.getElementById('user-profile');
+            profileDiv.classList.remove('hidden');
             
-            // 2. Show UI elements in header
-            userProfile.classList.remove('hidden');
-            clearBtn.classList.remove('hidden');
-            
-            // 3. Update UI with Google account data
             document.getElementById('user-avatar').src = responsePayload.picture;
             document.getElementById('user-name').innerText = responsePayload.given_name;
 
-            // 4. Initial Greeting (Only if chat is empty)
-            if (chatBox.children.length === 0) {
-                const welcomeHtml = `
-                    <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
-                        <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
-                            <p>Identity verified. Welcome to the neural network, <strong>${responsePayload.given_name}</strong>. How can I assist you today?</p>
-                        </div>
-                    </div>`;
-                chatBox.innerHTML = welcomeHtml;
-            }
+            appendMessage(`Hello, ${responsePayload.given_name}. Your identity has been verified. How can I assist you?`, false);
         }
 
         function signOut() {
-            // 1. Hide Chat Interface, Show Login Screen
-            chatInterface.classList.add('hidden');
-            chatInterface.classList.remove('flex');
-            loginScreen.classList.remove('hidden');
-            
-            // 2. Hide UI elements in header
-            userProfile.classList.add('hidden');
-            clearBtn.classList.add('hidden');
-            
-            // 3. Wipe memory for security
-            conversationHistory = [];
-            chatBox.innerHTML = '';
+            document.querySelector('.g_id_signin').classList.remove('hidden');
+            document.getElementById('user-profile').classList.add('hidden');
+            appendMessage("User signed out. Systems standing by.", false);
         }
 
         // --- Core Chat Logic ---
-
         function scrollToBottom() {
             chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
         }
@@ -181,7 +140,8 @@
                     <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
                         <p>Memory wiped. Systems refreshed. Ready for new input.</p>
                     </div>
-                </div>`;
+                </div>
+            `;
         }
 
         function appendMessage(text, isUser) {
@@ -221,7 +181,8 @@
                 <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
                 <div class="bg-slate-800/80 border border-slate-700 py-5 px-6 rounded-2xl rounded-tl-sm flex items-center">
                     <div class="dot-flashing"></div>
-                </div>`;
+                </div>
+            `;
             chatBox.appendChild(wrapper);
             scrollToBottom();
         }
@@ -238,6 +199,7 @@
 
             appendMessage(message, true);
             conversationHistory.push({ role: "user", content: message });
+            
             showLoading();
 
             try {
@@ -250,25 +212,4 @@
                 const data = await response.json();
                 document.getElementById('loading-indicator').remove();
 
-                if (response.ok && data.choices && data.choices[0].message) {
-                    const aiReply = data.choices[0].message.content;
-                    appendMessage(aiReply, false);
-                    conversationHistory.push({ role: "assistant", content: aiReply });
-                } else {
-                    appendMessage(`**Error:** ${data.error || 'Could not retrieve response.'}`, false);
-                }
-
-            } catch (err) {
-                document.getElementById('loading-indicator')?.remove();
-                appendMessage("**System Error:** Failed to establish connection to neural net.", false);
-                console.error(err);
-            } finally {
-                userInput.disabled = false;
-                sendBtn.disabled = false;
-                sendBtn.classList.remove('opacity-50');
-                userInput.focus();
-            }
-        });
-    </script>
-</body>
-</html>
+                if (response.ok && data.choices && data.choices
