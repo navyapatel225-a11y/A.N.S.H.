@@ -70,13 +70,7 @@
     </header>
 
     <main id="chat-box" class="chat-scroll flex-1 overflow-y-auto p-4 md:p-6 space-y-6 w-full max-w-4xl mx-auto scroll-smooth">
-        <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
-            <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
-                <p>I am <strong>A.N.S.H.</strong> how can i help you today?? and also what is your name??</p>
-            </div>
-        </div>
-    </main>
+        </main>
 
     <footer class="p-4 md:p-6 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md z-10">
         <form id="chat-form" class="max-w-4xl w-full mx-auto relative flex items-center">
@@ -109,6 +103,26 @@
         const sendBtn = document.getElementById('send-btn');
         
         let conversationHistory = [];
+        
+        // --- Identity Gate Variables ---
+        let systemUnlocked = false;
+        let guestName = "";
+
+        function initializeChat() {
+            chatBox.innerHTML = '';
+            const wrapper = document.createElement('div');
+            wrapper.className = "flex gap-4 w-full max-w-[90%] md:max-w-[80%]";
+            wrapper.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
+                <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
+                    <p>I am <strong>A.N.S.H.</strong> how can i help you today?? and also what is your name??</p>
+                </div>
+            `;
+            chatBox.appendChild(wrapper);
+        }
+
+        // Run immediately when page loads
+        initializeChat();
 
         function scrollToBottom() {
             chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
@@ -116,14 +130,9 @@
 
         function clearChat() {
             conversationHistory = [];
-            chatBox.innerHTML = `
-                <div class="flex gap-4 w-full max-w-[90%] md:max-w-[80%]">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0">A</div>
-                    <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl rounded-tl-sm shadow-sm prose text-slate-200">
-                        <p>Memory wiped. Systems refreshed. Ready for new input.</p>
-                    </div>
-                </div>
-            `;
+            systemUnlocked = false; // Relock the system on clear
+            guestName = "";
+            initializeChat();
         }
 
         function appendMessage(text, isUser) {
@@ -133,10 +142,11 @@
                 : "flex gap-4 w-full max-w-[90%] md:max-w-[80%]";
             
             const avatar = document.createElement('div');
+            // If it's a user and the system is unlocked, use their initial. Otherwise 'U'.
             avatar.className = isUser
-                ? "w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-sm shrink-0 order-last"
+                ? "w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-sm shrink-0 order-last uppercase"
                 : "w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-500/20 shrink-0";
-            avatar.innerText = isUser ? "U" : "A";
+            avatar.innerText = isUser ? (systemUnlocked ? guestName.charAt(0) : "U") : "A";
 
             const msgBubble = document.createElement('div');
             msgBubble.className = isUser 
@@ -205,10 +215,49 @@
             if (!message) return;
 
             userInput.value = '';
+            
+            // Disable inputs while processing
             userInput.disabled = true;
             sendBtn.disabled = true;
             sendBtn.classList.add('opacity-50');
 
+            // --- 🚨 GATEKEEPER CHECK 🚨 ---
+            // If the user hasn't given their name yet, intercept the message!
+            if (!systemUnlocked) {
+                guestName = message; // Save their name
+                systemUnlocked = true; // Unlock the system
+                
+                // Show the user's message using 'U' avatar (since we just set their name)
+                appendMessage(message, true);
+                showLoading();
+
+                // Fake a processing delay
+                setTimeout(() => {
+                    document.getElementById('loading-indicator').remove();
+                    
+                    const welcomeMsg = `Identity verified. Welcome, **${guestName}**! Network connection established. What's on your mind?`;
+                    appendMessage(welcomeMsg, false);
+                    
+                    // Inject their name silently into the Groq history
+                    conversationHistory.push({ 
+                        role: "system", 
+                        content: `The user's name is ${guestName}. Always remember this name for the rest of the conversation.` 
+                    });
+                    
+                    // Also store the welcome message so Groq sees the flow
+                    conversationHistory.push({ role: "assistant", content: welcomeMsg });
+
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                    sendBtn.classList.remove('opacity-50');
+                    userInput.focus();
+                }, 1000);
+                
+                return; // Stop the script here so it doesn't call Groq yet!
+            }
+            // --------------------------------
+
+            // Normal API flow once unlocked
             appendMessage(message, true);
             conversationHistory.push({ role: "user", content: message });
             
